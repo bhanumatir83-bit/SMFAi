@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART MARKET FINDER APP POWERED BY DEVAM RATHOD</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        emeraldCustom: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            800: '#065f46',
+                            900: '#064e3b',
+                            950: '#022c22',
+                        },
+                        amberCustom: {
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-12px)' },
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)' },
+                            '100%': { boxShadow: '0 0 35px rgba(245, 158, 11, 0.7)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #03140e;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: rgba(15, 32, 26, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(22, 45, 37, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .glass-input {
+            background: rgba(10, 25, 20, 0.75);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #ffffff;
+        }
+
+        .glass-input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+            outline: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #021a13;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0d4d38;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #10b981;
+        }
+
+        /* Leaflet map custom styling */
+        #market-map {
+            width: 100%;
+            height: 100%;
+            border-radius: 1rem;
+            z-index: 10;
+        }
+        .leaflet-popup-content-wrapper {
+            background: #0f2d22 !important;
+            color: #ffffff !important;
+            border: 1px solid #10b981;
+            border-radius: 12px !important;
+        }
+        .leaflet-popup-tip {
+            background: #0f2d22 !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative antialiased selection:bg-emerald-500 selection:text-white">
+
+    <!-- BACKGROUND ANIMATED AMBIENT GLOWS -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-emerald-600/20 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div class="absolute top-1/2 -right-32 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 2s;"></div>
+        <div class="absolute -bottom-32 left-1/3 w-96 h-96 bg-emerald-400/15 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 1s;"></div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 1: COVER PAGE / LANDING SPLASH -->
+    <!-- ========================================== -->
+    <section id="cover-screen" class="relative z-10 flex flex-col justify-between min-h-screen p-6 sm:p-10 text-center transition-all duration-700">
+        <!-- Header Banner -->
+        <header class="w-full max-w-4xl mx-auto py-3.5 px-6 glass-panel rounded-full border border-emerald-400/40 shadow-[0_0_25px_rgba(16,185,129,0.25)] animate-float">
+            <h1 class="text-xs sm:text-sm font-extrabold tracking-widest text-emerald-300 uppercase flex items-center justify-center gap-2">
+                <i class="fa-solid fa-microchip text-amber-400 animate-pulse"></i> SMART MARKET FINDER APP POWERED BY DEVAM RATHOD
+            </h1>
+        </header>
+
+        <!-- Main Hero Section -->
+        <main class="max-w-3xl mx-auto my-auto py-12 flex flex-col items-center">
+            <div class="relative mb-6">
+                <div class="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-tr from-emerald-400 via-teal-400 to-amber-400 p-1 shadow-[0_0_40px_rgba(16,185,129,0.4)] animate-glow">
+                    <div class="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center">
+                        <i class="fa-solid fa-basket-shopping text-5xl sm:text-6xl text-transparent bg-clip-text bg-gradient-to-tr from-emerald-400 to-amber-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+                Fresh Choice for <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400">Best Prices & Fresh Produce!</span>
+            </h2>
+
+            <p class="text-base sm:text-xl text-amber-300/90 font-bold max-w-xl mb-8 leading-relaxed glass-card py-3 px-6 rounded-2xl border border-amber-400/30">
+                "Stop searching everywhere. Your best deal starts here!"
+            </p>
+
+            <!-- Feature Pills -->
+            <div class="flex flex-wrap justify-center gap-3 mb-10 text-xs sm:text-sm text-emerald-300 font-medium">
+                <span class="glass-card px-4 py-2 rounded-full border border-emerald-500/30"><i class="fa-solid fa-location-dot text-amber-400 mr-2"></i>Live GPS Radius</span>
+                <span class="glass-card px-4 py-2 rounded-full border border-emerald-500/30"><i class="fa-solid fa-bolt text-amber-400 mr-2"></i>Instant AI Price Matrix</span>
+                <span class="glass-card px-4 py-2 rounded-full border border-emerald-500/30"><i class="fa-solid fa-store text-amber-400 mr-2"></i>Verified Local Vendors</span>
+            </div>
+
+            <!-- Explore Markets CTA Button -->
+            <button id="shop-now-btn" onclick="triggerWelcomeInterstitial()" class="group relative inline-flex items-center justify-center px-10 py-5 text-lg font-black text-slate-950 bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 rounded-2xl shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:scale-105 hover:shadow-[0_0_45px_rgba(245,158,11,0.6)] active:scale-95 transition-all duration-300 cursor-pointer overflow-hidden">
+                <span class="relative z-10 flex items-center gap-3">
+                    Explore Markets <i class="fa-solid fa-arrow-right group-hover:translate-x-2 transition-transform"></i>
+                </span>
+                <div class="absolute inset-0 bg-white/30 group-hover:opacity-100 opacity-0 transition-opacity"></div>
+            </button>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-xs text-slate-400 max-w-md mx-auto">
+            © 2026 Smart Market Finder AI. Designed & Developed by <span class="text-emerald-400 font-bold">DEVAM RATHOD</span>. All rights reserved.
+        </footer>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 2: WELCOME INTERSTITIAL (3.8 SEC)   -->
+    <!-- ========================================== -->
+    <section id="welcome-interstitial" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-slate-950/95 backdrop-blur-2xl transition-all duration-500">
+        <div class="text-center max-w-xl mx-auto flex flex-col items-center">
+            <!-- Pulsing Logo Ring -->
+            <div class="relative mb-8">
+                <div class="w-32 h-32 rounded-full border-4 border-emerald-500/30 border-t-emerald-400 animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center text-amber-400 text-4xl">
+                    <i class="fa-solid fa-store animate-bounce"></i>
+                </div>
+            </div>
+
+            <h2 class="text-2xl sm:text-4xl font-extrabold text-white mb-2 leading-tight">
+                Welcome to the World of Markets
+            </h2>
+            <p class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 font-black text-lg sm:text-xl tracking-wider uppercase mb-8">
+                Powered by DEVAM RATHOD
+            </p>
+
+            <!-- Progress Bar -->
+            <div class="w-72 h-2.5 bg-slate-800 rounded-full overflow-hidden border border-emerald-500/30 mb-4 shadow-inner">
+                <div id="welcome-progress-bar" class="h-full bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 w-0 transition-all duration-[3800ms] ease-linear"></div>
+            </div>
+            <p class="text-xs text-slate-400 italic">Initializing smart market index & nearby prices...</p>
+        </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- MAIN APP SCREEN & DASHBOARD                -->
+    <!-- ========================================== -->
+    <div id="main-app" class="hidden min-h-screen relative z-10 flex flex-col pb-24 md:pb-6">
+
+        <!-- TOP BAR / HEADER -->
+        <header class="sticky top-0 z-40 glass-panel border-b border-emerald-500/20 px-4 sm:px-8 py-3">
+            <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('home')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-amber-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">
+                        <i class="fa-solid fa-leaf"></i>
+                    </div>
+                    <div>
+                        <div class="font-extrabold text-white text-base leading-tight tracking-tight flex items-center gap-2">
+                            SMART MARKET FINDER
+                            <span class="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-500/40">AI</span>
+                        </div>
+                        <div class="text-[10px] text-emerald-400 font-bold">By DEVAM RATHOD</div>
+                    </div>
+                </div>
+
+                <!-- Location Selector -->
+                <div class="hidden md:flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-emerald-500/30 text-xs">
+                    <i class="fa-solid fa-location-dot text-amber-400"></i>
+                    <span class="text-slate-300 font-semibold">Location:</span>
+                    <select id="city-selector" onchange="changeCity(this.value)" class="bg-transparent text-emerald-300 font-bold focus:outline-none cursor-pointer">
+                        <option value="Vasai-Virar" selected class="bg-slate-900 text-white">Vasai-Virar, MH</option>
+                        <option value="Mumbai" class="bg-slate-900 text-white">Mumbai, MH</option>
+                        <option value="Delhi" class="bg-slate-900 text-white">Delhi NCR</option>
+                        <option value="Bengaluru" class="bg-slate-900 text-white">Bengaluru, KA</option>
+                    </select>
+                    <button onclick="requestGPS()" title="Detect Current Location" class="ml-1 text-emerald-400 hover:text-white transition">
+                        <i class="fa-solid fa-crosshairs"></i>
+                    </button>
+                </div>
+
+                <!-- Right Quick Controls -->
+                <div class="flex items-center gap-3">
+                    <button onclick="openShopkeeperModal()" class="hidden sm:flex items-center gap-2 text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 px-3.5 py-2 rounded-xl border border-emerald-500/40 transition">
+                        <i class="fa-solid fa-store"></i> Shopkeeper Portal
+                    </button>
+                    <!-- Header Exit App Button directly after Shopkeeper/AI -->
+                    <button onclick="exitApplication()" class="flex items-center gap-2 text-xs font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 px-3.5 py-2 rounded-xl border border-rose-500/40 transition hover:scale-105">
+                        <i class="fa-solid fa-power-off"></i> Exit App
+                    </button>
+                </div>
+
+            </div>
+        </header>
+
+        <!-- MAIN VIEW CONTAINER -->
+        <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8">
+
+            <!-- TAB 1: HOME DASHBOARD -->
+            <div id="tab-home" class="tab-content space-y-8 animate-fadeIn">
+                <!-- Search & Hero -->
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-emerald-500/30 relative overflow-hidden">
+                    <div class="relative z-10 max-w-2xl space-y-4">
+                        <span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-300 text-xs font-bold rounded-full border border-amber-500/30">
+                            <i class="fa-solid fa-bolt mr-1"></i> Smart Market Price Intelligence
+                        </span>
+                        <h2 class="text-2xl sm:text-4xl font-extrabold text-white leading-tight">
+                            Discover Local Markets & Real-time Prices Near You
+                        </h2>
+                        
+                        <!-- Search Input -->
+                        <div class="relative mt-4">
+                            <input type="text" id="home-search-input" onkeyup="handleHomeSearch(event)" placeholder="Search shops, fruits, or vegetables (e.g. Kashmiri Apples)..." class="w-full glass-input py-4 pl-12 pr-28 rounded-2xl text-sm font-medium">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400 text-lg"></i>
+                            <button onclick="executeHomeSearch()" class="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-amber-500 text-slate-950 font-extrabold text-xs rounded-xl hover:scale-105 transition">
+                                Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Market Statistics -->
+                <div class="grid grid-cols-3 gap-3 sm:gap-6">
+                    <div class="glass-card p-4 sm:p-6 rounded-2xl border border-emerald-500/20 text-center">
+                        <div id="stat-shops" class="text-2xl sm:text-4xl font-extrabold text-emerald-400">0</div>
+                        <div class="text-[11px] sm:text-xs text-slate-300 font-semibold mt-1">Verified Shops</div>
+                    </div>
+                    <div class="glass-card p-4 sm:p-6 rounded-2xl border border-emerald-500/20 text-center">
+                        <div id="stat-fruits" class="text-2xl sm:text-4xl font-extrabold text-amber-400">0</div>
+                        <div class="text-[11px] sm:text-xs text-slate-300 font-semibold mt-1">Fruit Varieties</div>
+                    </div>
+                    <div class="glass-card p-4 sm:p-6 rounded-2xl border border-emerald-500/20 text-center">
+                        <div id="stat-veggies" class="text-2xl sm:text-4xl font-extrabold text-teal-300">0</div>
+                        <div class="text-[11px] sm:text-xs text-slate-300 font-semibold mt-1">Vegetables Listed</div>
+                    </div>
+                </div>
+
+                <!-- Quick Categories -->
+                <div class="space-y-3">
+                    <h3 class="font-extrabold text-lg text-white">Quick Categories</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <button onclick="filterCategory('Fruit')" class="glass-card p-4 rounded-2xl border border-emerald-500/20 hover:border-emerald-400 flex items-center gap-3 transition">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg">
+                                <i class="fa-solid fa-apple-whole"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-bold text-white">Fruits</div>
+                                <div class="text-[10px] text-slate-400">Fresh & Organic</div>
+                            </div>
+                        </button>
+                        <button onclick="filterCategory('Vegetable')" class="glass-card p-4 rounded-2xl border border-emerald-500/20 hover:border-emerald-400 flex items-center gap-3 transition">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg">
+                                <i class="fa-solid fa-carrot"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-bold text-white">Vegetables</div>
+                                <div class="text-[10px] text-slate-400">Farm Direct</div>
+                            </div>
+                        </button>
+                        <button onclick="switchTab('map')" class="glass-card p-4 rounded-2xl border border-emerald-500/20 hover:border-emerald-400 flex items-center gap-3 transition">
+                            <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center font-bold text-lg">
+                                <i class="fa-solid fa-map-pin"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-bold text-white">Nearby Shops</div>
+                                <div class="text-[10px] text-slate-400">Interactive Map</div>
+                            </div>
+                        </button>
+                        <button onclick="switchTab('compare')" class="glass-card p-4 rounded-2xl border border-emerald-500/20 hover:border-emerald-400 flex items-center gap-3 transition">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-lg">
+                                <i class="fa-solid fa-scale-balanced"></i>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-bold text-white">Best Prices</div>
+                                <div class="text-[10px] text-slate-400">Price Matrix</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Featured Nearby Vendors -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-extrabold text-xl text-white">Featured Nearby Shops</h3>
+                        <button onclick="switchTab('map')" class="text-xs font-bold text-amber-400 hover:underline">View All on Map →</button>
+                    </div>
+                    <div id="featured-shops-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <!-- Dynamic Featured Shop Cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: MAP VIEW -->
+            <div id="tab-map" class="tab-content hidden space-y-4 animate-fadeIn">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-extrabold text-xl text-white flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot text-emerald-400"></i> Interactive Market Map
+                    </h3>
+                    <button onclick="recenterMap()" class="px-3 py-1.5 glass-card text-xs font-bold text-emerald-300 rounded-xl border border-emerald-500/30">
+                        <i class="fa-solid fa-crosshairs mr-1"></i> Recenter
+                    </button>
+                </div>
+                <div class="w-full h-[65vh] glass-panel rounded-3xl p-2 border border-emerald-500/30 relative">
+                    <div id="market-map" class="w-full h-full rounded-2xl"></div>
+                </div>
+            </div>
+
+            <!-- TAB 3: ALL SHOPS -->
+            <div id="tab-shops" class="tab-content hidden space-y-4 animate-fadeIn">
+                <h3 class="font-extrabold text-xl text-white">All Registered Local Shops</h3>
+                <div id="all-shops-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dynamic Shops List -->
+                </div>
+            </div>
+
+            <!-- TAB 4: COMPARE PRICES -->
+            <div id="tab-compare" class="tab-content hidden space-y-6 animate-fadeIn">
+                <div class="space-y-2">
+                    <h3 class="font-extrabold text-xl text-white">Product Price Matrix</h3>
+                    <p class="text-xs text-slate-300">Compare rates across nearby vendors & find lowest price listings.</p>
+                </div>
+
+                <!-- Filter & Search Bar -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button onclick="setCompareCategory('ALL')" class="compare-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950">All</button>
+                        <button onclick="setCompareCategory('Fruit')" class="compare-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:text-white">Fruits</button>
+                        <button onclick="setCompareCategory('Vegetable')" class="compare-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:text-white">Vegetables</button>
+                    </div>
+                    <input type="text" id="compare-search-input" onkeyup="renderPriceComparison()" placeholder="Filter product name..." class="glass-input p-2.5 rounded-xl text-xs w-full sm:w-64">
+                </div>
+
+                <div id="price-matrix-container" class="space-y-4">
+                    <!-- Dynamic Matrix Cards -->
+                </div>
+            </div>
+
+            <!-- TAB 5: AI ASSISTANT -->
+            <div id="tab-ai" class="tab-content hidden space-y-4 animate-fadeIn">
+                <div class="glass-panel p-5 rounded-3xl border border-emerald-500/30 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> AI Natural Language Assistant
+                        </h3>
+                        <p class="text-xs text-slate-300">Ask questions like "Where are the cheapest tomatoes near me?"</p>
+                    </div>
+                    <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full font-bold border border-amber-500/40">Powered by Devam Rathod AI</span>
+                </div>
+
+                <!-- Chat Box container -->
+                <div class="glass-panel rounded-3xl border border-emerald-500/30 h-[50vh] flex flex-col overflow-hidden">
+                    <div id="ai-chat-log" class="flex-1 p-4 overflow-y-auto space-y-4">
+                        <div class="flex gap-3 items-start">
+                            <div class="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 font-bold">
+                                <i class="fa-solid fa-robot"></i>
+                            </div>
+                            <div class="glass-card p-3 rounded-2xl max-w-[85%] text-slate-200 text-xs sm:text-sm">
+                                Hello! I'm your Market Finder AI assistant. How can I help you find the freshest produce or cheapest prices today?
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prompt input area -->
+                    <div class="p-3 bg-slate-900/90 border-t border-emerald-500/20 flex gap-2">
+                        <input type="text" id="ai-user-input" onkeypress="handleAIPromptKey(event)" placeholder="Ask AI: e.g. Find cheapest apples..." class="flex-1 glass-input px-4 py-2.5 rounded-xl text-xs">
+                        <button onclick="sendAIPrompt()" class="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-amber-500 text-slate-950 font-extrabold text-xs rounded-xl hover:scale-105 transition">
+                            Send
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Suggested Prompts -->
+                <div class="flex flex-wrap gap-2 text-xs">
+                    <button onclick="runSuggestedPrompt('Find cheapest Kashmiri Apples')" class="glass-card px-3 py-1.5 rounded-xl text-slate-300 border border-emerald-500/20 hover:text-emerald-300">
+                        "Find cheapest Kashmiri Apples"
+                    </button>
+                    <button onclick="runSuggestedPrompt('Best price for Spinach')" class="glass-card px-3 py-1.5 rounded-xl text-slate-300 border border-emerald-500/20 hover:text-emerald-300">
+                        "Best price for Spinach"
+                    </button>
+                    <button onclick="runSuggestedPrompt('Which shop is open right now?')" class="glass-card px-3 py-1.5 rounded-xl text-slate-300 border border-emerald-500/20 hover:text-emerald-300">
+                        "Which shop is open right now?"
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- BOTTOM MOBILE NAVIGATION BAR (Exit Button placed AFTER AI Assistant) -->
+        <nav class="fixed bottom-0 inset-x-0 z-40 glass-panel border-t border-emerald-500/20 py-2.5 px-2">
+            <div class="max-w-md mx-auto flex items-center justify-around text-center">
+                <button onclick="switchTab('home')" class="nav-tab-btn flex flex-col items-center gap-1 text-emerald-400 text-[11px] font-bold" data-tab="home">
+                    <i class="fa-solid fa-house text-base"></i>
+                    <span>Home</span>
+                </button>
+                <button onclick="switchTab('map')" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-400 text-[11px] font-bold" data-tab="map">
+                    <i class="fa-solid fa-map-location-dot text-base"></i>
+                    <span>Map</span>
+                </button>
+                <button onclick="switchTab('shops')" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-400 text-[11px] font-bold" data-tab="shops">
+                    <i class="fa-solid fa-store text-base"></i>
+                    <span>Shops</span>
+                </button>
+                <button onclick="switchTab('compare')" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-400 text-[11px] font-bold" data-tab="compare">
+                    <i class="fa-solid fa-scale-balanced text-base"></i>
+                    <span>Compare</span>
+                </button>
+                <button onclick="switchTab('ai')" class="nav-tab-btn flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-400 text-[11px] font-bold" data-tab="ai">
+                    <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
+                    <span>AI Assistant</span>
+                </button>
+                <!-- Exit Button directly placed after AI Assistant -->
+                <button onclick="exitApplication()" class="flex flex-col items-center gap-1 text-rose-400 hover:text-rose-300 text-[11px] font-extrabold">
+                    <i class="fa-solid fa-power-off text-base"></i>
+                    <span>Exit</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 1: SHOP DETAILS VIEW                 -->
+    <!-- ========================================== -->
+    <div id="shop-details-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+        <div class="glass-panel w-full max-w-3xl rounded-3xl border border-emerald-500/40 overflow-hidden shadow-2xl my-8 max-h-[90vh] flex flex-col">
+            <!-- Header Image Banner -->
+            <div class="relative h-48 sm:h-56 w-full shrink-0">
+                <img id="modal-shop-img" src="" alt="Shop" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+                
+                <button onclick="closeShopModal()" class="absolute top-4 right-4 w-9 h-9 bg-slate-900/80 hover:bg-slate-900 text-white rounded-full flex items-center justify-center border border-white/20 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <div class="absolute bottom-4 left-6 right-6 flex items-end justify-between">
+                    <div>
+                        <span id="modal-shop-rating" class="inline-block px-2.5 py-1 bg-amber-500 text-slate-950 font-black text-xs rounded-lg mb-1">
+                            ★ 4.8
+                        </span>
+                        <h2 id="modal-shop-name" class="text-2xl sm:text-3xl font-extrabold text-white">Shop Name</h2>
+                        <p id="modal-shop-address" class="text-xs text-slate-300 flex items-center gap-1">
+                            <i class="fa-solid fa-location-dot text-amber-400"></i> Address here
+                        </p>
+                    </div>
+                    <button onclick="triggerDirectionsFromModal()" class="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-amber-500 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg hover:scale-105 transition">
+                        <i class="fa-solid fa-diamond-turn-right mr-1"></i> Get Directions
+                    </button>
+                </div>
+            </div>
+
+            <!-- Shop Info Bar -->
+            <div class="bg-slate-900/90 border-b border-emerald-500/20 px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs">
+                <div class="flex items-center gap-4 text-slate-300">
+                    <span><i class="fa-solid fa-clock text-emerald-400 mr-1"></i> <span id="modal-shop-hours">7:00 AM - 9:00 PM</span></span>
+                    <span><i class="fa-solid fa-phone text-emerald-400 mr-1"></i> <span id="modal-shop-phone">+91 98765 43210</span></span>
+                </div>
+                <div class="text-emerald-400 font-semibold">
+                    <i class="fa-solid fa-rotate text-xs mr-1"></i> Inventory Updated: <span id="modal-shop-updated">10 mins ago</span>
+                </div>
+            </div>
+
+            <!-- Inventory Search & Items -->
+            <div class="p-6 flex-1 overflow-y-auto space-y-4">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-stacked text-amber-400"></i> Available Inventory
+                    </h3>
+                    <input type="text" id="modal-inventory-search" onkeyup="filterModalInventory()" placeholder="Search item in shop..." class="glass-input px-3 py-1.5 rounded-xl text-xs w-full sm:w-56">
+                </div>
+
+                <div id="modal-inventory-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Dynamic Shop Products -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: DIRECTIONS & NAVIGATION          -->
+    <!-- ========================================== -->
+    <div id="directions-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+        <div class="glass-panel w-full max-w-lg rounded-3xl border border-emerald-500/40 p-6 shadow-2xl space-y-6">
+            <div class="flex items-center justify-between border-b border-emerald-500/20 pb-4">
+                <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-route text-emerald-400"></i> Route & Travel Time
+                </h3>
+                <button onclick="closeDirectionsModal()" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="glass-card p-4 rounded-2xl border border-emerald-500/20 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-slate-400">Destination Shop</div>
+                        <div id="nav-target-name" class="font-bold text-white text-base">Shop Name</div>
+                    </div>
+                    <div class="text-right">
+                        <div id="nav-target-dist" class="text-emerald-400 font-extrabold text-lg">1.2 km</div>
+                        <div class="text-[10px] text-slate-400">From current location</div>
+                    </div>
+                </div>
+
+                <!-- Mode Selectors -->
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="selectTravelMode('driving')" class="travel-mode-btn bg-emerald-500 text-slate-950 p-3 rounded-2xl flex flex-col items-center justify-center font-bold text-xs" data-mode="driving">
+                        <i class="fa-solid fa-car text-xl mb-1"></i>
+                        <span>Driving</span>
+                        <span id="eta-driving" class="text-[10px] opacity-80">4 mins</span>
+                    </button>
+                    <button onclick="selectTravelMode('two-wheeler')" class="travel-mode-btn glass-card hover:bg-emerald-500/20 p-3 rounded-2xl flex flex-col items-center justify-center font-bold text-xs text-slate-300" data-mode="two-wheeler">
+                        <i class="fa-solid fa-motorcycle text-xl mb-1"></i>
+                        <span>Bike</span>
+                        <span id="eta-bike" class="text-[10px] opacity-80">3 mins</span>
+                    </button>
+                    <button onclick="selectTravelMode('walking')" class="travel-mode-btn glass-card hover:bg-emerald-500/20 p-3 rounded-2xl flex flex-col items-center justify-center font-bold text-xs text-slate-300" data-mode="walking">
+                        <i class="fa-solid fa-person-walking text-xl mb-1"></i>
+                        <span>Walking</span>
+                        <span id="eta-walking" class="text-[10px] opacity-80">14 mins</span>
+                    </button>
+                </div>
+
+                <!-- External Maps Redirect -->
+                <button onclick="openExternalGoogleMaps()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-amber-500 text-slate-950 font-extrabold rounded-2xl shadow-lg flex items-center justify-center gap-2 hover:opacity-90 transition">
+                    <i class="fa-solid fa-map-location-dot"></i> Open in Google Maps
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 3: SHOPKEEPER PORTAL                 -->
+    <!-- ========================================== -->
+    <div id="shopkeeper-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto">
+        <div class="glass-panel w-full max-w-2xl rounded-3xl border border-emerald-500/40 p-6 shadow-2xl my-8 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-emerald-500/20 pb-4 mb-4">
+                <h3 class="text-xl font-extrabold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-store text-amber-400"></i> Shopkeeper Inventory Portal
+                </h3>
+                <button onclick="closeShopkeeperModal()" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Login / Auth simulation -->
+            <div id="shopkeeper-auth-view" class="space-y-4 py-6">
+                <p class="text-xs text-slate-300 text-center">Select your registered shop to edit prices and stock:</p>
+                <div class="max-w-xs mx-auto space-y-3">
+                    <select id="shopkeeper-shop-select" class="w-full glass-input p-3 rounded-xl text-xs font-bold cursor-pointer">
+                        <!-- Dynamic shops list -->
+                    </select>
+                    <button onclick="loginShopkeeper()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-amber-500 text-slate-950 font-extrabold rounded-xl text-xs hover:opacity-90 transition">
+                        Access Vendor Dashboard
+                    </button>
+                </div>
+            </div>
+
+            <!-- Vendor Dashboard inside modal -->
+            <div id="shopkeeper-dash-view" class="hidden flex-1 overflow-y-auto space-y-6">
+                <div class="glass-card p-4 rounded-2xl border border-emerald-500/20 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-slate-400">Editing Vendor Profile</div>
+                        <div id="vendor-shop-title" class="font-extrabold text-white text-base">Shop Name</div>
+                    </div>
+                    <button onclick="logoutShopkeeper()" class="text-xs text-rose-400 hover:underline">Switch Shop</button>
+                </div>
+
+                <!-- Add New Product Form -->
+                <div class="glass-card p-4 rounded-2xl border border-emerald-500/20 space-y-3">
+                    <h4 class="font-bold text-sm text-amber-400 flex items-center gap-1">
+                        <i class="fa-solid fa-plus-circle"></i> Add / Update Item
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" id="vendor-item-name" placeholder="Item Name (e.g., Green Apples)" class="glass-input p-2.5 rounded-xl text-xs">
+                        <select id="vendor-item-type" class="glass-input p-2.5 rounded-xl text-xs cursor-pointer">
+                            <option value="Fruit" class="bg-slate-900 text-white">Fruit</option>
+                            <option value="Vegetable" class="bg-slate-900 text-white">Vegetable</option>
+                        </select>
+                        <input type="number" id="vendor-item-price" placeholder="Price in ₹" class="glass-input p-2.5 rounded-xl text-xs">
+                        <select id="vendor-item-unit" class="glass-input p-2.5 rounded-xl text-xs cursor-pointer">
+                            <option value="kg" class="bg-slate-900 text-white">Per kg</option>
+                            <option value="500g" class="bg-slate-900 text-white">Per 500g</option>
+                            <option value="dozen" class="bg-slate-900 text-white">Per Dozen</option>
+                            <option value="piece" class="bg-slate-900 text-white">Per Piece</option>
+                        </select>
+                    </div>
+                    <button onclick="addVendorItem()" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl text-xs transition">
+                        Save to Live Inventory
+                    </button>
+                </div>
+
+                <!-- Existing Inventory List -->
+                <div class="space-y-2">
+                    <h4 class="font-bold text-sm text-white">Current Listed Products</h4>
+                    <div id="vendor-inventory-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        <!-- Dynamic vendor items -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SCREEN 4: EXIT & THANK YOU PAGE            -->
+    <!-- ========================================== -->
+    <section id="thankyou-screen" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-slate-950 text-center transition-all duration-700">
+        <div class="max-w-md mx-auto glass-panel p-8 sm:p-10 rounded-3xl border border-emerald-500/40 shadow-[0_0_50px_rgba(16,185,129,0.3)] space-y-6 animate-float">
+            
+            <div class="w-20 h-20 bg-gradient-to-tr from-emerald-400 via-teal-300 to-amber-400 rounded-full flex items-center justify-center text-slate-950 text-3xl mx-auto shadow-lg animate-bounce">
+                <i class="fa-solid fa-heart"></i>
+            </div>
+
+            <div class="space-y-2">
+                <h2 class="text-3xl font-black text-white tracking-tight">
+                    THANK YOU FOR VISITING!
+                </h2>
+                <p class="text-emerald-400 font-extrabold text-sm uppercase tracking-wider">
+                    Smart Market Finder AI
+                </p>
+            </div>
+
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+                "We hope to see you again soon for fresh produce & best local market savings!"<br>
+                <span class="text-amber-400 font-bold block mt-2">Powered by DEVAM RATHOD</span>
+            </p>
+
+            <button onclick="reenterApp()" class="w-full py-4 bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-400 text-slate-950 font-black rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition">
+                <i class="fa-solid fa-rotate-left mr-2"></i> Re-enter Application
+            </button>
+
+        </div>
+    </section>
+
+    <!-- Leaflet JS for Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- MAIN JAVASCRIPT STATE & APPLICATION LOGIC -->
+    <script>
+        // ==========================================
+        // 1. DATA MODEL & DEMO DATA SET
+        // ==========================================
+        let currentCity = "Vasai-Virar";
+        let activeTab = "home";
+        let mapInstance = null;
+        let mapMarkers = [];
+
+        // Sample Vendors Data in Vasai-Virar, Mumbai, Delhi, Bengaluru
+        let shopsData = [
+            {
+                id: "shop-1",
+                name: "Rathod Fresh Fruit & Veggie Mart",
+                city: "Vasai-Virar",
+                address: "Station Road, Vasai West, MH",
+                lat: 19.3824,
+                lng: 72.8280,
+                rating: 4.9,
+                phone: "+91 98230 11223",
+                hours: "6:30 AM - 9:30 PM",
+                distance: "0.4 km",
+                payments: "UPI, Cash, Cards",
+                verified: true,
+                image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80",
+                lastUpdated: "5 mins ago",
+                items: [
+                    { name: "Alphonso Mangoes", type: "Fruit", price: 650, unit: "dozen", stock: "In Stock", tag: "Fresh Harvest", image: "https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=300&q=80" },
+                    { name: "Fresh Farm Spinach (Palak)", type: "Vegetable", price: 20, unit: "500g", stock: "In Stock", tag: "Organic", image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=300&q=80" },
+                    { name: "Red Kashmiri Apples", type: "Fruit", price: 140, unit: "kg", stock: "In Stock", tag: "Best Seller", image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=300&q=80" },
+                    { name: "Organic Tomatoes", type: "Vegetable", price: 30, unit: "kg", stock: "In Stock", tag: "Farm Direct", image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80" }
+                ]
+            },
+            {
+                id: "shop-2",
+                name: "Green Leaf Organics",
+                city: "Vasai-Virar",
+                address: "Evershine City, Vasai East, MH",
+                lat: 19.3950,
+                lng: 72.8420,
+                rating: 4.7,
+                phone: "+91 99112 33445",
+                hours: "7:00 AM - 9:00 PM",
+                distance: "1.1 km",
+                payments: "UPI, Cash",
+                verified: true,
+                image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=600&q=80",
+                lastUpdated: "12 mins ago",
+                items: [
+                    { name: "Red Kashmiri Apples", type: "Fruit", price: 125, unit: "kg", stock: "In Stock", tag: "Lowest Price", image: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=300&q=80" },
+                    { name: "Organic Tomatoes", type: "Vegetable", price: 25, unit: "kg", stock: "In Stock", tag: "Discounted", image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80" },
+                    { name: "Bananas (Robusta)", type: "Fruit", price: 45, unit: "dozen", stock: "In Stock", tag: "Daily Fresh", image: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=300&q=80" },
+                    { name: "Fresh Broccoli", type: "Vegetable", price: 80, unit: "kg", stock: "Low Stock", tag: "Imported", image: "https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?auto=format&fit=crop&w=300&q=80" }
+                ]
+            },
+            {
+                id: "shop-3",
+                name: "Vasai Wholesale Veggie Hub",
+                city: "Vasai-Virar",
+                address: "Ambabari Market, Virar West, MH",
+                lat: 19.4560,
+                lng: 72.8120,
+                rating: 4.6,
+                phone: "+91 97654 12345",
+                hours: "5:00 AM - 8:00 PM",
+                distance: "2.3 km",
+                payments: "Cash Only",
+                verified: true,
+                image: "https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?auto=format&fit=crop&w=600&q=80",
+                lastUpdated: "2 mins ago",
+                items: [
+                    { name: "Organic Tomatoes", type: "Vegetable", price: 22, unit: "kg", stock: "In Stock", tag: "Wholesale Rate", image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=300&q=80" },
+                    { name: "Fresh Potatoes (Indore)", type: "Vegetable", price: 28, unit: "kg", stock: "In Stock", tag: "Bulk Stock", image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=300&q=80" },
+                    { name: "Red Onions", type: "Vegetable", price: 32, unit: "kg", stock: "In Stock", tag: "Fresh Arrival", image: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cf?auto=format&fit=crop&w=300&q=80" }
+                ]
+            },
+            {
+                id: "shop-4",
+                name: "Mumbai Premium Fruit Market",
+                city: "Mumbai",
+                address: "Crawford Market, South Mumbai, MH",
+                lat: 18.9472,
+                lng: 72.8344,
+                rating: 4.8,
+                phone: "+91 98200 99887",
+                hours: "8:00 AM - 10:00 PM",
+                distance: "42 km",
+                payments: "UPI, Cards",
+                verified: true,
+                image: "https://images.unsplash.com/photo-1573248197036-7ac229302196?auto=format&fit=crop&w=600&q=80",
+                lastUpdated: "1 hour ago",
+                items: [
+                    { name: "Alphonso Mangoes", type: "Fruit", price: 700, unit: "dozen", stock: "In Stock", tag: "Export Grade", image: "https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=300&q=80" },
+                    { name: "Dragon Fruit", type: "Fruit", price: 90, unit: "piece", stock: "In Stock", tag: "Exotic", image: "https://images.unsplash.com/photo-1527325678964-54921646f988?auto=format&fit=crop&w=300&q=80" }
+                ]
+            }
+        ];
+
+        let selectedShopForModal = null;
+        let activeVendorShopId = null;
+        let activeCompareCategory = "ALL";
+
+        // ==========================================
+        // 2. FLOW & NAVIGATION LOGIC
+        // ==========================================
+
+        function triggerWelcomeInterstitial() {
+            document.getElementById('cover-screen').classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                document.getElementById('cover-screen').classList.add('hidden');
+                document.getElementById('welcome-interstitial').classList.remove('hidden');
+                
+                // Trigger Progress Bar
+                setTimeout(() => {
+                    document.getElementById('welcome-progress-bar').style.width = '100%';
+                }, 50);
+
+                // Auto transition after ~3.8 seconds
+                setTimeout(() => {
+                    document.getElementById('welcome-interstitial').classList.add('opacity-0');
+                    setTimeout(() => {
+                        document.getElementById('welcome-interstitial').classList.add('hidden');
+                        document.getElementById('main-app').classList.remove('hidden');
+                        initApp();
+                    }, 500);
+                }, 3800);
+            }, 500);
+        }
+
+        function initApp() {
+            updateDashboardStats();
+            renderFeaturedShops();
+            renderAllShops();
+            renderPriceComparison();
+            populateShopkeeperSelect();
+        }
+
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById('tab-' + tabId);
+            if (target) target.classList.remove('hidden');
+
+            // Update nav button highlights
+            document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+                if (btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.add('text-emerald-400');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('text-emerald-400');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+
+            // Initialize map if map tab opened
+            if (tabId === 'map') {
+                setTimeout(() => {
+                    initLeafletMap();
+                }, 200);
+            }
+        }
+
+        function exitApplication() {
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('thankyou-screen').classList.remove('hidden');
+        }
+
+        function reenterApp() {
+            document.getElementById('thankyou-screen').classList.add('hidden');
+            document.getElementById('cover-screen').classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+            document.getElementById('welcome-progress-bar').style.width = '0%';
+        }
+
+        // ==========================================
+        // 3. DASHBOARD & RENDER LOGIC
+        // ==========================================
+
+        function updateDashboardStats() {
+            const filteredShops = shopsData.filter(s => s.city === currentCity || currentCity === "All");
+            document.getElementById('stat-shops').innerText = filteredShops.length;
+
+            let fruitCount = 0;
+            let veggieCount = 0;
+            filteredShops.forEach(s => {
+                s.items.forEach(i => {
+                    if (i.type === 'Fruit') fruitCount++;
+                    if (i.type === 'Vegetable') veggieCount++;
+                });
+            });
+
+            document.getElementById('stat-fruits').innerText = fruitCount;
+            document.getElementById('stat-veggies').innerText = veggieCount;
+        }
+
+        function renderFeaturedShops() {
+            const container = document.getElementById('featured-shops-container');
+            const shops = shopsData.filter(s => s.city === currentCity || currentCity === "Vasai-Virar");
+            
+            container.innerHTML = shops.map(shop => `
+                <div class="glass-card rounded-2xl border border-emerald-500/20 overflow-hidden group hover:border-emerald-500/50 transition duration-300">
+                    <div class="relative h-40 overflow-hidden">
+                        <img src="${shop.image}" alt="${shop.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute top-3 left-3 bg-emerald-950/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-emerald-400 text-[10px] font-extrabold border border-emerald-500/30 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check text-emerald-400"></i> Verified Market
+                        </div>
+                        <div class="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-amber-400 text-xs font-bold border border-amber-500/30">
+                            ★ ${shop.rating}
+                        </div>
+                        <div class="absolute bottom-2 left-3 bg-slate-950/80 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-500/20">
+                            <i class="fa-solid fa-person-walking text-amber-400 mr-1"></i> ${shop.distance} away
+                        </div>
+                    </div>
+                    <div class="p-5 space-y-3">
+                        <div>
+                            <h4 class="font-extrabold text-white text-base leading-tight">${shop.name}</h4>
+                            <p class="text-xs text-slate-300 flex items-center gap-1 mt-1">
+                                <i class="fa-solid fa-location-dot text-amber-400"></i> ${shop.address}
+                            </p>
+                            <p class="text-[11px] text-teal-300 font-medium mt-1">
+                                <i class="fa-solid fa-money-bill-wave text-emerald-400 mr-1"></i> Accepts: ${shop.payments}
+                            </p>
+                        </div>
+                        <div class="flex items-center justify-between text-xs pt-2 border-t border-emerald-500/10">
+                            <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-apple-whole mr-1"></i> ${shop.items.length} Items Listed</span>
+                            <span class="text-slate-400"><i class="fa-solid fa-clock text-amber-400 mr-1"></i> ${shop.hours}</span>
+                        </div>
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="openShopModal('${shop.id}')" class="flex-1 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs rounded-xl border border-emerald-500/30 transition">
+                                View Inventory
+                            </button>
+                            <button onclick="openDirectionsModal('${shop.id}')" class="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs rounded-xl border border-amber-500/30 transition">
+                                <i class="fa-solid fa-diamond-turn-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAllShops() {
+            const container = document.getElementById('all-shops-container');
+            const shops = shopsData;
+            
+            container.innerHTML = shops.map(shop => `
+                <div class="glass-card rounded-2xl border border-emerald-500/20 p-5 space-y-4">
+                    <div class="flex gap-4">
+                        <img src="${shop.image}" alt="${shop.name}" class="w-20 h-20 rounded-xl object-cover">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${shop.city}</span>
+                            <h4 class="font-bold text-white text-sm leading-tight">${shop.name}</h4>
+                            <p class="text-[11px] text-slate-300">${shop.address}</p>
+                            <div class="text-xs text-amber-400 font-bold">★ ${shop.rating} / 5.0</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openShopModal('${shop.id}')" class="flex-1 py-2 bg-emerald-500/20 text-emerald-300 font-bold text-xs rounded-xl border border-emerald-500/30 hover:bg-emerald-500/30">
+                            Details & Stock
+                        </button>
+                        <button onclick="openDirectionsModal('${shop.id}')" class="px-3 py-2 bg-amber-500/20 text-amber-300 font-bold text-xs rounded-xl border border-amber-500/30 hover:bg-amber-500/30">
+                            Directions
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterCategory(cat) {
+            switchTab('compare');
+            setCompareCategory(cat);
+        }
+
+        function changeCity(city) {
+            currentCity = city;
+            updateDashboardStats();
+            renderFeaturedShops();
+            if (mapInstance) {
+                const cityCoords = {
+                    "Vasai-Virar": [19.3824, 72.8280],
+                    "Mumbai": [18.9472, 72.8344],
+                    "Delhi": [28.6139, 77.2090],
+                    "Bengaluru": [12.9716, 77.5946]
+                };
+                if (cityCoords[city]) {
+                    mapInstance.setView(cityCoords[city], 13);
+                }
+            }
+        }
+
+        function requestGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        alert("GPS Location Detected: " + lat.toFixed(4) + ", " + lng.toFixed(4));
+                        document.getElementById('gps-status-btn').innerText = "GPS Active";
+                        document.getElementById('gps-status-btn').classList.replace('text-emerald-300', 'text-amber-300');
+                        if (mapInstance) mapInstance.setView([lat, lng], 14);
+                    },
+                    (error) => {
+                        alert("Unable to retrieve location. Defaulting to Vasai-Virar area.");
+                    }
+                );
+            }
+        }
+
+        // ==========================================
+        // 4. MAP INTEGRATION (LEAFLET)
+        // ==========================================
+
+        function initLeafletMap() {
+            const mapContainer = document.getElementById('market-map');
+            if (!mapContainer) return;
+
+            if (mapInstance) {
+                mapInstance.invalidateSize();
+                return;
+            }
+
+            // Default Vasai Coordinates
+            mapInstance = L.map('market-map').setView([19.3824, 72.8280], 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(mapInstance);
+
+            shopsData.forEach(shop => {
+                const marker = L.marker([shop.lat, shop.lng]).addTo(mapInstance);
+                marker.bindPopup(`
+                    <div class="p-2 space-y-2">
+                        <h4 class="font-bold text-sm text-emerald-400">${shop.name}</h4>
+                        <p class="text-xs text-slate-200">${shop.address}</p>
+                        <div class="text-xs font-bold text-amber-400">★ ${shop.rating} Rating</div>
+                        <button onclick="openShopModal('${shop.id}')" class="w-full py-1 bg-emerald-500 text-slate-950 font-bold rounded text-xs mt-1">
+                            View Shop
+                        </button>
+                    </div>
+                `);
+                mapMarkers.push(marker);
+            });
+        }
+
+        function recenterMap() {
+            if (mapInstance) mapInstance.setView([19.3824, 72.8280], 12);
+        }
+
+        // ==========================================
+        // 5. PRICE MATRIX & COMPARISON LOGIC
+        // ==========================================
+
+        function setCompareCategory(cat) {
+            activeCompareCategory = cat;
+            document.querySelectorAll('.compare-cat-btn').forEach(btn => {
+                if (btn.innerText.includes(cat) || (cat === 'ALL' && btn.innerText.includes('All'))) {
+                    btn.className = "compare-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950";
+                } else {
+                    btn.className = "compare-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:text-white";
+                }
+            });
+            renderPriceComparison();
+        }
+
+        function renderPriceComparison() {
+            const query = (document.getElementById('compare-search-input').value || "").toLowerCase();
+            const container = document.getElementById('price-matrix-container');
+
+            // Aggregate all items across shops
+            let itemMap = {};
+            shopsData.forEach(shop => {
+                shop.items.forEach(item => {
+                    if (activeCompareCategory !== 'ALL' && item.type !== activeCompareCategory) return;
+                    if (query && !item.name.toLowerCase().includes(query)) return;
+
+                    if (!itemMap[item.name]) {
+                        itemMap[item.name] = [];
+                    }
+                    itemMap[item.name].push({
+                        shopId: shop.id,
+                        shopName: shop.name,
+                        price: item.price,
+                        unit: item.unit,
+                        stock: item.stock,
+                        image: item.image
+                    });
+                });
+            });
+
+            const itemNames = Object.keys(itemMap);
+            if (itemNames.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-card p-8 text-center rounded-2xl text-slate-400 text-xs">
+                        No products match your search or filter. Try searching for "Apple", "Tomato", or "Mango".
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = itemNames.map(itemName => {
+                const listings = itemMap[itemName];
+                // Find lowest price listing
+                listings.sort((a, b) => a.price - b.price);
+                const lowestPrice = listings[0].price;
+
+                return `
+                    <div class="glass-panel p-5 rounded-2xl border border-emerald-500/30 space-y-3">
+                        <div class="flex items-center gap-3">
+                            <img src="${listings[0].image}" alt="${itemName}" class="w-12 h-12 rounded-xl object-cover">
+                            <div>
+                                <h4 class="font-extrabold text-white text-base">${itemName}</h4>
+                                <div class="text-xs text-slate-400">Available across ${listings.length} shop(s)</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                            ${listings.map(l => {
+                                const isCheapest = l.price === lowestPrice;
+                                return `
+                                    <div class="glass-card p-3 rounded-xl border ${isCheapest ? 'border-amber-400/80 bg-amber-500/10' : 'border-emerald-500/20'} flex items-center justify-between">
+                                        <div>
+                                            <div class="text-xs font-bold text-white">${l.shopName}</div>
+                                            <div class="text-[10px] text-slate-400">${l.stock}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-sm font-extrabold text-emerald-400">₹${l.price} <span class="text-[10px] text-slate-300">/${l.unit}</span></div>
+                                            ${isCheapest ? '<span class="text-[9px] bg-amber-500 text-slate-950 px-1.5 py-0.5 font-black rounded uppercase">Lowest Price</span>' : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Search inputs helper
+        function handleHomeSearch(e) {
+            if (e.key === 'Enter') executeHomeSearch();
+        }
+
+        function executeHomeSearch() {
+            const val = document.getElementById('home-search-input').value;
+            if (val) {
+                switchTab('compare');
+                document.getElementById('compare-search-input').value = val;
+                renderPriceComparison();
+            }
+        }
+
+        // ==========================================
+        // 6. SHOP MODAL & INVENTORY DETAIL
+        // ==========================================
+
+        function openShopModal(shopId) {
+            const shop = shopsData.find(s => s.id === shopId);
+            if (!shop) return;
+
+            selectedShopForModal = shop;
+            document.getElementById('modal-shop-img').src = shop.image;
+            document.getElementById('modal-shop-name').innerText = shop.name;
+            document.getElementById('modal-shop-rating').innerText = `★ ${shop.rating}`;
+            document.getElementById('modal-shop-address').innerHTML = `<i class="fa-solid fa-location-dot text-amber-400"></i> ${shop.address}`;
+            document.getElementById('modal-shop-hours').innerText = shop.hours;
+            document.getElementById('modal-shop-phone').innerText = shop.phone;
+            document.getElementById('modal-shop-updated').innerText = shop.lastUpdated;
+
+            renderModalInventory(shop.items);
+            document.getElementById('shop-details-modal').classList.remove('hidden');
+        }
+
+        function closeShopModal() {
+            document.getElementById('shop-details-modal').classList.add('hidden');
+        }
+
+        function renderModalInventory(items) {
+            const container = document.getElementById('modal-inventory-list');
+            container.innerHTML = items.map(item => `
+                <div class="glass-card p-3 rounded-xl border border-emerald-500/20 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <img src="${item.image}" alt="${item.name}" class="w-12 h-12 rounded-lg object-cover">
+                        <div>
+                            <div class="flex items-center gap-1">
+                                <span class="font-bold text-xs text-white">${item.name}</span>
+                                ${item.tag ? `<span class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-bold border border-amber-500/30">${item.tag}</span>` : ''}
+                            </div>
+                            <span class="text-[10px] text-slate-400">${item.type} • ${item.stock}</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-extrabold text-emerald-400 text-sm">₹${item.price}</div>
+                        <div class="text-[10px] text-slate-400">Per ${item.unit}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterModalInventory() {
+            if (!selectedShopForModal) return;
+            const q = document.getElementById('modal-inventory-search').value.toLowerCase();
+            const filtered = selectedShopForModal.items.filter(i => i.name.toLowerCase().includes(q));
+            renderModalInventory(filtered);
+        }
+
+        // ==========================================
+        // 7. DIRECTIONS MODAL
+        // ==========================================
+
+        function openDirectionsModal(shopId) {
+            const shop = shopsData.find(s => s.id === shopId);
+            if (!shop) return;
+            selectedShopForModal = shop;
+            document.getElementById('nav-target-name').innerText = shop.name;
+            document.getElementById('directions-modal').classList.remove('hidden');
+        }
+
+        function triggerDirectionsFromModal() {
+            closeShopModal();
+            if (selectedShopForModal) openDirectionsModal(selectedShopForModal.id);
+        }
+
+        function closeDirectionsModal() {
+            document.getElementById('directions-modal').classList.add('hidden');
+        }
+
+        function selectTravelMode(mode) {
+            document.querySelectorAll('.travel-mode-btn').forEach(b => {
+                if (b.getAttribute('data-mode') === mode) {
+                    b.className = "travel-mode-btn bg-emerald-500 text-slate-950 p-3 rounded-2xl flex flex-col items-center justify-center font-bold text-xs";
+                } else {
+                    b.className = "travel-mode-btn glass-card hover:bg-emerald-500/20 p-3 rounded-2xl flex flex-col items-center justify-center font-bold text-xs text-slate-300";
+                }
+            });
+        }
+
+        function openExternalGoogleMaps() {
+            if (selectedShopForModal) {
+                const url = `https://www.google.com/maps/search/?api=1&query=${selectedShopForModal.lat},${selectedShopForModal.lng}`;
+                window.open(url, '_blank');
+            }
+        }
+
+        // ==========================================
+        // 8. SHOPKEEPER DASHBOARD MODAL
+        // ==========================================
+
+        function openShopkeeperModal() {
+            document.getElementById('shopkeeper-modal').classList.remove('hidden');
+        }
+
+        function closeShopkeeperModal() {
+            document.getElementById('shopkeeper-modal').classList.add('hidden');
+        }
+
+        function populateShopkeeperSelect() {
+            const select = document.getElementById('shopkeeper-shop-select');
+            select.innerHTML = shopsData.map(s => `<option value="${s.id}">${s.name} (${s.city})</option>`).join('');
+        }
+
+        function loginShopkeeper() {
+            activeVendorShopId = document.getElementById('shopkeeper-shop-select').value;
+            const shop = shopsData.find(s => s.id === activeVendorShopId);
+            if (shop) {
+                document.getElementById('shopkeeper-auth-view').classList.add('hidden');
+                document.getElementById('shopkeeper-dash-view').classList.remove('hidden');
+                document.getElementById('vendor-shop-title').innerText = shop.name;
+                renderVendorInventoryList();
+            }
+        }
+
+        function logoutShopkeeper() {
+            activeVendorShopId = null;
+            document.getElementById('shopkeeper-auth-view').classList.remove('hidden');
+            document.getElementById('shopkeeper-dash-view').classList.add('hidden');
+        }
+
+        function renderVendorInventoryList() {
+            const shop = shopsData.find(s => s.id === activeVendorShopId);
+            if (!shop) return;
+            const container = document.getElementById('vendor-inventory-list');
+            container.innerHTML = shop.items.map((item, idx) => `
+                <div class="glass-card p-2.5 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                        <span class="font-bold text-white">${item.name}</span>
+                        <span class="text-[10px] text-slate-400">(${item.type})</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-emerald-400 font-bold">₹${item.price}/${item.unit}</span>
+                        <button onclick="deleteVendorItem(${idx})" class="text-rose-400 hover:text-rose-300">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addVendorItem() {
+            const name = document.getElementById('vendor-item-name').value;
+            const type = document.getElementById('vendor-item-type').value;
+            const price = parseFloat(document.getElementById('vendor-item-price').value);
+            const unit = document.getElementById('vendor-item-unit').value;
+
+            if (!name || isNaN(price)) {
+                alert("Please enter a valid item name and price.");
+                return;
+            }
+
+            const shop = shopsData.find(s => s.id === activeVendorShopId);
+            if (shop) {
+                shop.items.unshift({
+                    name: name,
+                    type: type,
+                    price: price,
+                    unit: unit,
+                    stock: "In Stock",
+                    image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=300&q=80"
+                });
+                shop.lastUpdated = "Just now";
+                renderVendorInventoryList();
+                renderPriceComparison();
+                renderFeaturedShops();
+                document.getElementById('vendor-item-name').value = '';
+                document.getElementById('vendor-item-price').value = '';
+            }
+        }
+
+        function deleteVendorItem(idx) {
+            const shop = shopsData.find(s => s.id === activeVendorShopId);
+            if (shop) {
+                shop.items.splice(idx, 1);
+                renderVendorInventoryList();
+                renderPriceComparison();
+            }
+        }
+
+        // ==========================================
+        // 9. AI NATURAL LANGUAGE ASSISTANT LOGIC
+        // ==========================================
+
+        function handleAIPromptKey(e) {
+            if (e.key === 'Enter') sendAIPrompt();
+        }
+
+        function runSuggestedPrompt(text) {
+            document.getElementById('ai-user-input').value = text;
+            sendAIPrompt();
+        }
+
+        function sendAIPrompt() {
+            const input = document.getElementById('ai-user-input');
+            const query = input.value.trim();
+            if (!query) return;
+
+            const chatLog = document.getElementById('ai-chat-log');
+
+            // Append User Message
+            chatLog.innerHTML += `
+                <div class="flex gap-3 items-start justify-end">
+                    <div class="bg-emerald-500 text-slate-950 font-bold p-3 rounded-2xl max-w-[85%] text-xs sm:text-sm shadow-lg">
+                        ${query}
+                    </div>
+                </div>
+            `;
+
+            input.value = '';
+            chatLog.scrollTop = chatLog.scrollHeight;
+
+            // Generate Smart Dynamic Response
+            setTimeout(() => {
+                let aiResponse = "I scanned local registered markets for your query. ";
+
+                if (query.toLowerCase().includes('apple')) {
+                    aiResponse += "<b>Green Leaf Organics</b> currently offers Kashmiri Apples at the lowest rate of <b>₹125 / kg</b>.";
+                } else if (query.toLowerCase().includes('spinach') || query.toLowerCase().includes('palak')) {
+                    aiResponse += "<b>Rathod Fresh Fruit & Veggie Mart</b> has farm-fresh Spinach at <b>₹20 / 500g</b>.";
+                } else if (query.toLowerCase().includes('mango')) {
+                    aiResponse += "<b>Rathod Fresh Mart</b> has premium Alphonso Mangoes at <b>₹650 / dozen</b>.";
+                } else {
+                    aiResponse += "Based on live price data, <b>Rathod Fresh Mart</b> & <b>Green Leaf Organics</b> offer the best price-to-distance score in your city!";
+                }
+
+                chatLog.innerHTML += `
+                    <div class="flex gap-3 items-start">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 font-bold">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="glass-card p-3 rounded-2xl max-w-[85%] text-slate-200 text-xs sm:text-sm">
+                            ${aiResponse}
+                        </div>
+                    </div>
+                `;
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }, 600);
+        }
+    </script>
+</body>
+</html>
